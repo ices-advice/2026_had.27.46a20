@@ -1,0 +1,227 @@
+---
+title: " WGNSSK plots for had.27.46a20"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  word_document:
+    reference_docx: boot/data/reportTemplate_2024_plots.docx
+  mathjax: yes
+  pdf_document: default
+
+---
+
+
+```{r setup, echo=FALSE, include=FALSE}
+
+### General settings ###
+
+library(knitr)
+library(icesAdvice)
+library(icesTAF)
+library(tidyverse)
+# library(pander)
+# library(ggplot2)
+# library(reshape2)
+library(FLCore)
+# library(png)
+# library(magrittr)
+library(flextable) 
+
+
+ay <- 2026
+caption_prefix <- "Haddock in Subarea 4, Division 6.a and Subdivision 20. "
+
+knitr::opts_chunk$set(cache=FALSE,echo=FALSE, warning=FALSE,
+                      message=FALSE,progress=FALSE,verbose=FALSE,
+                      include=TRUE,dev='png',autodep=FALSE,
+                      tab.cap.style="Caption",fig.cap.style="Caption")
+
+```  
+
+# Exploratory analyses
+
+```{r ea-4, echo=FALSE, fig.width=15, fig.cap="Figure 8.3.4. Haddock in Subarea 4, Division 6.a, and Subdivision 20. Log abundance indices by cohort (survey “catch curves”) for each of the survey indices."}
+
+knitr::include_graphics(
+  "output/SURBAR/SURBAR - catch curves.png")
+```
+
+```{r ea-5, echo=FALSE, fig.width=15, fig.cap="Figure 8.3.5. Haddock in Subarea 4, Division 6.a, and Subdivision 20. Mean-standardized log abundance indices by age and cohort for each of the survey indices. The age represented by each line is indicated by a circled number at the start of the line."}
+
+knitr::include_graphics(
+  "output/SURBAR/SURBAR - cohort consistency.png")
+```
+
+```{r ea-6, echo=FALSE, fig.width=10, fig.cap="Figure 8.3.6. Haddock in Subarea 4, Division 6.a, and Subdivision 20. Within-survey correlations for the delta-GAM NS-WC Q1 (upper) and Q3+Q4 (lower) survey series, comparing index values at different ages for the same year classes (cohorts). In each plot, the straight line is a normal linear model fit: a thick line (with black points) represents a significant (p < 0.05) regression, while a thin line (with blue points) is not significant. Approximate 95% confidence intervals for each fit are also shown."}
+
+knitr::include_graphics(
+  "output/SURBAR/had.27.46a20 - Q1 survey splom plot.png")
+
+knitr::include_graphics(
+  "output/SURBAR/had.27.46a20 - Q3+Q4 survey splom plot.png")
+
+```
+
+```{r ea-7, echo=FALSE, fig.width=15, fig.cap="Figure 8.3.7. Haddock in Subarea 4, Division 6.a, and Subdivision 20. Summary plots from an exploratory SURBAR assessment, using both available survey-derived indices (delta-GAM NS-WC Q1 and delta-GAM NS-WC Q3+Q4). Mean mortality Z (ages 2 to 4), relative spawning-stock biomass (SSB), relative total biomass (TSB), and relative recruitment. Shaded grey areas correspond to the 90% CI. Green points give the model estimates, while red crosses and black lines give (respectively) the mean and median values from the uncertainty estimation bootstrap."}
+
+knitr::include_graphics(
+  "output/SURBAR/SURBAR - stock summary.png")
+
+
+```
+
+```{r ea-8, echo=FALSE, fig.width=15, fig.cap="Figure 8.3.8. Haddock in Subarea 4, Division 6.a, and Subdivision 20. Log residuals by age from an exploratory SURBAR assessment, using both available survey-derived indices (delta-GAM NS-WC Q1 and delta-GAM NS-WC Q3+Q4)."}
+
+knitr::include_graphics(
+  "output/SURBAR/SURBAR - residuals with smoother Q1.png")
+
+
+knitr::include_graphics(
+  "output/SURBAR/SURBAR - residuals with smoother Q3_4.png")
+
+```
+
+```{r ea-9, echo=FALSE, fig.width=15, fig.cap="Figure 8.3.9. Haddock in Subarea 4, Division 6.a, and Subdivision 20. Comparisons of mean-standardized stock summary estimates from SAM (blue) and SURBAR (black) models."}
+
+knitr::include_graphics(
+  "output/SURBAR/Stock summary SAM vs SURBAR.png")
+
+```
+
+# Assessment 
+
+```{r as-1, echo=FALSE, fig.width=15, fig.cap="Figure 8.3.10. Haddock in Subarea 4, Division 6.a, and Subdivision 20. Stock summary from final SAM assessment. Black lines give the assessment estimates for spawning-stock biomass (SSB; tonnes), fishing mortality (Fbar, ages 2−4), re-cruitment (age 0; thousands) and total catch (tonnes). Grey shading indicates the pointwise 95% confidence intervals, and black crosses give observed values for total catch. Horizontal dashed lines indicate various reference points in relation to SSB (Blim in orange, MSY Btrigger in blue) or fishing mortality (FMSY in blue) as calculated at WGNSSK 2025 (see section 8.8)."}
+
+#knitr::include_graphics("output/SAM/Stock summary.png")
+
+```
+
+```{r as-2, echo=FALSE, fig.width=15, fig.cap="Figure 8.3.11. Haddock in Subarea 4, Division 6.a, and Subdivision 20. Stock–recruitment estimates from the final SAM assessment. Point estimates are labelled by year class while the grey shaded areas indicate the 95% confidence inter-vals for each estimate."}
+
+knitr::include_graphics("output/SAM/sr.png")
+
+```
+
+```{r as-3, echo=FALSE, fig.width=10, fig.cap="Figure 8.3.12. Haddock in Subarea 4, Division 6.a, and Subdivision 20. One-observation-ahead residuals for commercial catch, delta-GAM NS-WC Q1 and delta-GAM NS-CS Q3+Q4 from the final SAM assessment."}
+
+knitr::include_graphics("output/SAM/residuals.png")
+
+```
+
+```{r as-4, echo=FALSE, fig.width=10, fig.cap="Figure 8.3.13. Haddock in Subarea 4, Division 6.a, and Subdivision 20. Residuals for the N-process (survival) and F-process (fishing mortality) from the final SAM assessment."}
+
+knitr::include_graphics("output/SAM/procres.png")
+
+```
+
+```{r as-5, echo=FALSE, fig.width=15, fig.cap="Figure 8.3.14. Haddock in Subarea 4, Division 6.a, and Subdivision 20. Time-series of observed (points) and fitted (lines) values for total catch, by age."}
+
+knitr::include_graphics("output/SAM/fleet1.png")
+
+```
+
+```{r as-6, echo=FALSE, fig.width=15, fig.cap="Figure 8.3.15. Haddock in Subarea 4, Division 6.a, and Subdivision 20. Time-series of observed (points) and fitted (lines) values for the delta-GAM NS-WC Q1 survey index, by age."}
+
+knitr::include_graphics("output/SAM/fleet2.png")
+
+```
+
+```{r as-7, echo=FALSE, fig.width=15, fig.cap="Figure 8.3.16. Haddock in Subarea 4, Division 6.a, and Subdivision 20 Time-series of observed (points) and fitted (lines) values for the delta-GAM NS-WC Q3+Q4 survey index, by age."}
+
+knitr::include_graphics("output/SAM/fleet3.png")
+
+```
+
+```{r as-8, echo=FALSE, fig.width=15, fig.cap="Figure 8.3.17. Haddock in Subarea 4, Division 6.a, and Subdivision 20 Leave one out analysis results for spawning-stock biomass (SSB; tonnes), fishing mortality (Fbar, ages 2−4), recruitment (age 0; thousands) and total catch (tonnes) from the final SAM assessment."}
+
+knitr::include_graphics("output/SAM/leaveout.png")
+
+```
+
+```{r as-9, echo=FALSE, fig.width=15, fig.cap="Figure 8.3.18. Haddock in Subarea 4, Division 6.a, and Subdivision 20. Retrospective plots for the SAM assessment. The final-year run is shown in black with the pointwise 95% confidence interval indicated by the grey shading, while retro-spective peels are shown with coloured lines. Mohn’s rho estimates are given in the top right of each plot."}
+
+knitr::include_graphics("output/SAM/Retro.png")
+
+```
+
+```{r as-10, echo=FALSE, fig.width=15, fig.cap="Figure 8.3.19. Haddock in Subarea 4, Division 6.a, and Subdivision 20. Comparison of assessment results from previous stock assessment (WGNSSK 2025) and current stock assessment (WGNSSK 2026)."}
+
+knitr::include_graphics(paste0("output/SAM/Stock summary WGNSSK ",ay," vs WGNSSK ",ay-1,".png"))
+
+```
+
+# Forecast 
+
+```{r fc-1, echo=FALSE, fig.width=15, fig.cap="Figure 8.6.1. Haddock in Subarea 4, Division 6.a, and Subdivision 20. Results of growth modelling for landings mean weights-at-age using cohort-based linear models (Jaworski, 2011). Cohorts 2018–2022 are shown here. Black points are available observations, red solid lines show linear fits to these points, and red points indicate projected weights for older ages."}
+
+
+knitr::include_graphics("output/Forecast/Cohort growth modelling - landings.png")
+
+```
+
+```{r fc-2, echo=FALSE, fig.width=15, fig.cap="Figure 8.6.2. Haddock in Subarea 4, Division 6.a, and Subdivision 20. Results of growth modelling for discards+IBC+BMS mean weights-at-age using cohort-based linear models (Jaworski, 2011). Cohorts 2018–2023 are shown here. Black points are available observations, red solid lines show linear fits to these points, and red points indicate projected weights for older ages."}
+
+knitr::include_graphics("output/Forecast/Cohort growth modelling - discards.png")
+
+
+```
+
+```{r fc-3, echo=FALSE, fig.width=15, fig.cap="Figure 8.6.3. Haddock in Subarea 4, Division 6.a, and Subdivision 20. Mean weights-at-age used in the forecast for total catch, landings, discards (including IBC and BMS) and the stock."}
+
+knitr::include_graphics("output/Forecast/Forecast inputs - mean weights v2.png")
+
+```
+
+```{r fc-4, echo=FALSE, fig.width=15, fig.cap="Figure 8.6.4. Haddock in Subarea 4, Division 6.a, and Subdivision 20. Comparison of numbers-at-age from previous stock assessment and forecast results (WGNSSK 2025) and current stock assessment and forecast results (WGNSSK 2026)."}
+
+knitr::include_graphics("output/Change_in_advice/Change in advice - Stock numbers-at-age.png")
+
+```
+
+```{r fc-5, echo=FALSE, fig.width=15, fig.cap="Figure 8.6.5. Haddock in Subarea 4, Division 6.a, and Subdivision 20. Comparison of mean weights-at-age in the stock used in the previous forecast (WGNSSK 2025) and current forecast (WGNSSK 2026)."}
+
+knitr::include_graphics("output/Change_in_advice/Change in advice - stock mean weights.png")
+
+```
+
+```{r fc-6, echo=FALSE, fig.width=15, fig.cap="Figure 8.6.6. Haddock in Subarea 4, Division 6.a, and Subdivision 20. Comparison of biomass at age from previous stock assessment and forecast results (WGNSSK 2025) and current stock assessment and forecast results (WGNSSK 2026)."}
+
+knitr::include_graphics("output/Change_in_advice/Change in advice - Stock biomass-at-age.png")
+
+```
+
+
+```{r fc-7, echo=FALSE, fig.width=15, fig.cap="Figure 8.6.7. Haddock in Subarea 4, Division 6.a, and Subdivision 20. Comparison of selectivity used in the previous forecast (WGNSSK 2025) and current forecast (WGNSSK 2026)."}
+
+knitr::include_graphics("output/Change_in_advice/Change in advice - selectivity.png")
+
+```
+
+```{r fc-8, echo=FALSE, fig.width=15, fig.cap="Figure 8.6.8. Haddock in Subarea 4, Division 6.a, and Subdivision 20. Comparison of SSB, Fbar, total catch and recruitment assumptions used in the previous forecast (WGNSSK 2025) and current forecast (WGNSSK 2026)."}
+
+knitr::include_graphics("output/Change_in_advice/Change in advice - forecast assumptions.png")
+
+```
+
+# Reference points
+
+```{r rp-1, echo=FALSE, fig.width=15, fig.cap="Figure 8.8.1. Haddock in Subarea 4, Division 6.a, and Subdivision 20. Results of EqSim estimation of FMSY and of FP.05 with both the assessment/advice error and rule."}
+
+# This section always needs the final eqsim run figure. This only needs updating if ref points are recalculated. 
+
+# Then additional plots are needed:
+# Figure 8.8.1. Haddock in Subarea 4, Division 6.a, and Subdivision 20. Mean values of stock weights-at-age, maturity-at-age, natural mortality-at-age, and selectivity over the most recent 3, 5, 10 and 20 years.
+# 
+# Figure 8.8.2. Haddock in Subarea 4, Division 6.a, and Subdivision 20. Recruitment, stock–recruitment relationships and stock type: a) Recruits per SSB (log scale), b) estimation of autocorrelation in the recruitment time-series, c) fitting different stock–recruitment relationships, d) stock–recruitment relationship for determining stock type.
+# 
+# Figure 8.8.3. Haddock in Subarea 4, Division 6.a, and Subdivision 20. Results of EqSim estimation of FMSY and of FP.05 with the assessment/advice error but no rule.
+
+
+
+```
+
+
+
+
+\newpage
+\clearpage
+

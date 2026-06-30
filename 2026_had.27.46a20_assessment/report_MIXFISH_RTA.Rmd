@@ -1,0 +1,290 @@
+---
+title: "had.27.46a20: Reproduce the advice for WGMIXFISH"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: html_document
+---
+
+```{r, settings, include=FALSE,echo=FALSE}
+rm(list=ls())
+
+knitr::opts_chunk$set(
+  fig.width = 9, message=FALSE, warning=FALSE,eval=TRUE,include=TRUE,echo=TRUE
+)
+options(digits=4)
+
+```
+
+# Setup
+```{r, setup,results='hide'}
+
+library(knitr)
+library(FLCore)
+library(FLasher)
+library(mixfishtools)
+library(tidyr)
+library(ggplot2)
+library(ggplotFL)
+library(kableExtra)
+
+load("data/init.RData") # Contains useful stuff such as reference points
+
+# forecast year definitions
+yrAssess <- ay-1 # final year of assessment data
+yrNow <- ay # intermediate year
+yrTAC <- ay+1 # advice year
+yrTACp1 <- ay+2 # advice year +1 (needed to get SSB at end of yrTAC)
+
+```
+
+
+# Gather advice sheet values
+
+A TAC constraint was not used this year. The intermediate year assumption was F *status quo*.
+
+Most of these values should be as reported on the advice sheet. However, for some the correct values for comparison are reported in *Assessment summary and forecast results\_ NoSh haddock\_ WGNSSK_2026.xslx*. These are:
+
+The SSB values in `r ay` as the value in the spreadsheet uses the stock weights assumed for the forecast which are different to those used in the assessment.
+
+The catch and landings total in `r ay-1` as the value in the spreadsheet are those as estimated by SAM for `r ay-1` rather than the reported InterCatch value.
+
+```{r, advice-sheet-values}
+
+# Gather forecast info from advice sheet ------------------------------------------
+
+rec_assum <- rep(1998486,3) # take from table 1 in advice sheet
+
+Fsq <- 0.068 # from table 1 in advice sheet
+TAC_cont <- F
+
+# get these values from assessment and forecast summary spreadsheet, not advice sheet.
+SSB_ay <- 667758  # This is because SSB gets updated due to forecast weights.
+catch_ay_1 <- 71866 # We want SAM estimate of catches not InterCatch value.
+landings_ay_1 <- 55216 #  We want SAM estimate of landings not InterCatch value.
+
+# Reported output from single stock headline advice. See above for estimated values of landings and catch
+# yrAssess values (data yr) - take from table 9 in advice sheet
+# yrNow values (int yr) - take from table 1 in advice sheet. SSB isn't on advice sheet - see SSB_ay.
+# yrTAC values (advice year) - take from table 2, SSB comes from table 1
+# yrTACp1 values (SSB only) - take from table 2
+
+stfRef <- data.frame(
+  model = "NSSK",
+  year = yrAssess:yrTACp1,
+  catch = c(catch_ay_1, 51972, 87366, NA),
+  landings = c(landings_ay_1, 42534, 72284, NA),
+  fbar = c(0.079, 0.068, 0.167, NA),
+  ssb = c(751318, SSB_ay, 548869, 418419)
+)
+
+```
+
+# Get assessment results
+
+```{r, assess-res}
+# load assessment results ------------------------------------
+
+load("output/had_27_46a20_FLStock object_model estimates_2026.Rdata")
+load("output/had_27_46a20_FLStock object_input data_2026.Rdata")
+
+stkInp <- stock.data
+stkEst <- window(stock,end=yrAssess)
+
+units(stkInp@harvest) <- "f"
+
+L <- FLStocks(list(input = stkInp, estimated = stkEst))
+plot(L) + 
+  aes(linetype = stock) +
+  scale_color_manual(values = c(8,1)) + 
+  scale_linetype_manual(values = c(1,2)) +
+  theme_bw()
+
+```
+
+# Forecast setup
+
+The mean weights at age for the stock, catch, landings and discards get updated here to externally modelled values (cohort model).
+
+```{r, forecast-setup}
+# Extend FLStock, add forecast info ---------------------------------------
+
+# extend FLStock object
+stkProj <- stf(object = stkEst, nyears = 3, wts.nyears = 3, 
+               fbar.nyears = 3, f.rescale = TRUE, disc.nyears = 3)
+
+# stock-recruitment model (manual input within a geometric mean model)
+srPar <- FLPar(rec_assum, 
+               dimnames = list(params="a", year = c(yrNow, yrTAC, yrTACp1), iter = 1))
+
+srMod <- FLSR(model = "geomean", params = srPar)
+
+
+# replace individual weights
+ca.frct.wt <- read.table("output/Forecast/had.27.46a20 - Forecast weights - catch-at-age.txt")
+st.frct.wt <- read.table("output/Forecast/had.27.46a20 - Forecast weights - stock-at-age.txt")
+lan.frct.wt <- read.table("output/Forecast/had.27.46a20 - Forecast weights - landings-at-age.txt")
+dis.frct.wt <- read.table("output/Forecast/had.27.46a20 - Forecast weights - discards-at-age incl BMS and IBC.txt")
+colnames(ca.frct.wt) <-colnames(st.frct.wt) <-colnames(lan.frct.wt) <-colnames(dis.frct.wt) <- c(0:7,"8+")
+
+# print out these forecast weights for transparency
+catch.wt(stkProj)[, ac(yrNow:yrTACp1)][] <- t(ca.frct.wt) # catch weight-at-age
+kable(ca.frct.wt, digits = 4,caption="Forecast weights for the catch")
+
+landings.wt(stkProj)[, ac(yrNow:yrTACp1)][] <- t(lan.frct.wt) # landings weight-at-age
+kable(lan.frct.wt, digits = 4,caption="Forecast weights for the landings")
+
+discards.wt(stkProj)[, ac(yrNow:yrTACp1)][] <- t(dis.frct.wt) # discards weight-at-age
+kable(dis.frct.wt, digits = 4,caption="Forecast weights for the discards")
+
+stock.wt(stkProj)[, ac(yrNow:yrTACp1)][] <- t(st.frct.wt) # stock weight-at-age
+kable(st.frct.wt, digits = 4,caption="Forecast weights for the stock")
+
+# update n at age with forecast values
+# WG2026 forecast n at age for 2026 !!!!! 
+# See had_27_46a20 - N_at_age_in_intermediate_year_from_forecast.txt
+stock.n(stkProj)[,ac(2026)] <- c(2009665.46685674,
+339410.454276167,
+160563.045085096,
+157457.075737684,
+541161.564556428,
+251312.256909659,
+397042.922810798,
+193997.746579422,
+23806.6045626461)
+
+
+
+
+# View the extended FLStock
+df <- as.data.frame(stkProj)
+df <- subset(df, slot %in% c("landings.wt", "discards.wt", "catch.wt", "m", "mat", "harvest") & year > (yrAssess-20))
+df$forecast <- df$year %in% c(yrNow, yrTAC, yrTACp1)
+
+ggplot(df) + aes(x = year, y = data, group = age, color = forecast) +
+  facet_wrap(~slot, scales = "free_y") +
+  geom_line(show.legend = F) + 
+  scale_color_manual(values = c(8,1)) + 
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) + 
+  theme_bw()
+
+```
+
+# Set controls for the forecast
+
+Fmsy is `r Fmsy`. A TAC constraint was not used for the intermediate year.
+
+```{r, forecast-control}
+# Make forecast control object --------------------------------
+
+if(TAC_cont){ # TAC constraint used for intermediate year
+  TACNow <- TAC
+  
+  ctrl <- fwdControl( 
+    data.frame(
+      year = c(yrNow, yrTAC, yrTACp1),
+      value = c(TACNow, Fmsy, Fmsy),
+      quant = c("catch", "f", "f")
+    )
+  )
+  
+}else{ #Fsq used for intermediate year
+  ctrl <- fwdControl( 
+    data.frame(
+      year = c(yrNow, yrTAC, yrTACp1),
+      value = c(0.068, Fmsy, Fmsy),
+      quant = c("f")#,
+     # relYear = c(yrAssess, NA, NA)                               
+    )
+  )
+}
+
+```
+
+# Run the forecast
+
+```{r, forecast}
+
+# Run forecast ----------------------------------------------------
+
+# projection
+stkProj <- fwd(object = stkProj, control = ctrl, sr = srMod)
+
+# plot
+L <- FLStocks(list(assessment = stkEst, 
+                   forecast = stkProj[,ac(yrAssess:yrTACp1)]))
+plot(L) + 
+  # aes(linetype = stock) +
+  scale_color_manual(values = c(8,1)) + 
+  # scale_linetype_manual(values = c(2,1)) +
+  theme_bw()
+
+df <- data.frame(year = yrAssess:yrTACp1, 
+                 catch = c(catch(stkProj)[, ac(yrAssess:yrTACp1)]),
+                 fbar = round(c(fbar(stkProj)[, ac(yrAssess:yrTACp1)]),3)
+)
+
+kable(df, digits = 3)
+
+
+```
+
+# Compare forecast results
+
+```{r, plot}
+
+
+# WG2026 forecast n at age for 2026
+# "0";2009665.46685674
+# "1";339410.454276167
+# "2";160563.045085096
+# "3";157457.075737684
+# "4";541161.564556428
+# "5";251312.256909659
+# "6";397042.922810798
+# "7";193997.746579422
+# "8";23806.6045626461
+
+
+ 
+
+# Plot ------------------------------------------
+
+# stfRef is defined in chunk: advice_sheet_values
+
+stfDet <- data.frame(
+  model = "FLR",
+  year = ac(yrAssess:yrTACp1),
+  catch = c(catch(stkProj[,ac(yrAssess:yrTACp1)])),
+  landings = c(landings(stkProj[,ac(yrAssess:yrTACp1)])),
+  fbar = round(c(fbar(stkProj[,ac(yrAssess:yrTACp1)])),3),
+  ssb = c(ssb(stkProj[,ac(yrAssess:yrTACp1)]))
+)  
+
+df <- merge(stfRef, stfDet, all = T)
+df <- pivot_longer(df, cols = c(catch, landings, fbar, ssb), 
+                   names_to = "variable", values_to = "value")
+df <- df |>
+  filter(
+    (variable %in% c("catch", "landings", "fbar") & year <= yrTAC) |
+      (variable %in% c("ssb") & year <= yrTACp1))
+
+df2 <- pivot_wider(df, names_from = model, values_from = value)
+df2$percErr <- round((df2$FLR - df2$NSSK)/df2$NSSK * 100, 1)
+
+ggplot(df) + aes(x = year, y = value, group = model, color = model, shape = model) +
+  facet_wrap(~variable, scales = "free_y") +
+  geom_line() +
+  geom_point(size = 3, stroke = 1) +
+  scale_shape_discrete(solid = F) +
+  coord_cartesian(ylim = c(0, NA)) +
+  theme_bw()
+
+kable(df2, digits = 3)
+
+ggplot(df2) + aes(x = year, y = percErr) + 
+  facet_wrap(~variable) +
+  geom_col(fill = 4, color = 4) +
+  geom_hline(yintercept = 0, linetype = 1) +
+  geom_hline(yintercept = c(-10,10), linetype = 3) + 
+  theme_bw()
+
+```
